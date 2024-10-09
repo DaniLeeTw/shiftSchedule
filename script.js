@@ -129,7 +129,7 @@ function updateHolidayList() {
                 attempts++;
             } while (
                 (availableShift === lastShift[Object.keys(lastShift).pop()]) || // No consecutive night shifts
-                personnel.find(p => p.name === availableShift)?.gender === "女" || // No female night shifts
+                personnel.find(p => p.name === availableShift)?.gender === "female" || // No female night shifts
                 (availableShift === currentShift) || // No night shift after a day shift
                 attempts < 100
             );
