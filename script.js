@@ -1,17 +1,18 @@
 document.addEventListener("DOMContentLoaded", function () {
     let personnel = [];
     let holidays = [];
-
+    let dayShiftCount = {}; // Track day shift assignments
 
     // Format date function for Minguo year
     function formatDate(date) {
-    const year = date.getFullYear() - 1911; // Convert to Minguo year
-    const month = date.getMonth() + 1; // Month is 0-based, so add 1
-    const day = date.getDate();
+        const year = date.getFullYear() - 1911; // Convert to Minguo year
+        const month = date.getMonth() + 1; // Month is 0-based, so add 1
+        const day = date.getDate();
 
-    // Format as "113年12月25日"
-    return `${year}年${month}月${day}日`;
-}
+        // Format as "113年12月25日"
+        return `${year}年${month}月${day}日`;
+    }
+
     // Update personnel list UI
     function updatePersonnelList() {
         const list = document.getElementById("personnelList");
@@ -42,16 +43,16 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-// Update holiday list UI
-function updateHolidayList() {
-    const list = document.getElementById("holidayList");
-    list.innerHTML = "";
-    holidays.forEach(holiday => {
-        const li = document.createElement("li");
-        li.textContent = holiday; // This will already be in Minguo format
-        list.appendChild(li);
-    });
-}
+    // Update holiday list UI
+    function updateHolidayList() {
+        const list = document.getElementById("holidayList");
+        list.innerHTML = "";
+        holidays.forEach(holiday => {
+            const li = document.createElement("li");
+            li.textContent = holiday; // This will already be in Minguo format
+            list.appendChild(li);
+        });
+    }
 
     // Generate shifts based on selected time period
     document.getElementById("generateButton").addEventListener("click", function () {
@@ -62,6 +63,12 @@ function updateHolidayList() {
             alert("Please select a valid time period.");
             return;
         }
+
+        // Initialize dayShiftCount for personnel
+        dayShiftCount = {};
+        personnel.forEach(person => {
+            dayShiftCount[person.name] = 0; // Reset counts for new month
+        });
 
         // Generate schedule within the selected date range
         generateShifts(startDate, endDate);
@@ -89,9 +96,12 @@ function updateHolidayList() {
             const dateStr = formatDate(date); // Call the formatDate function
             const dayOfWeek = date.toLocaleDateString('zh-TW', { weekday: 'long' });
 
-            const isWeekend = (dayOfWeek === "星期六" || dayOfWeek === "星期日") || holidays.includes(dateStr);
-            const dayShift = isWeekend ? getAvailableShift('day', lastDayShift, lastNightShift[dateStr]) : "-";
-            const nightShift = getAvailableShift('night', lastNightShift, dayShift, lastDayShift[dateStr]);
+            const isWeekend = (dayOfWeek === "星期六" || dayOfWeek === "星期日");
+            const isHoliday = holidays.includes(dateStr);
+            const isSpecialDay = isWeekend || isHoliday;
+
+            let dayShift = isSpecialDay ? getAvailableShift('day', lastDayShift, lastNightShift[dateStr]) : "-";
+            let nightShift = getAvailableShift('night', lastNightShift, dayShift, lastDayShift[dateStr]);
 
             // Add row to the schedule table
             const row = document.createElement("tr");
@@ -120,8 +130,14 @@ function updateHolidayList() {
                 attempts++;
             } while (
                 (availableShift === lastShift[Object.keys(lastShift).pop()]) || // No consecutive day shifts
-                (availableShift === conflictingShift) && attempts < 100 // No night shift before the day shift
+                (availableShift === conflictingShift) || // No night shift before the day shift
+                (dayShiftCount[availableShift] >= 1 && attempts < 100) // Limit day shifts to 1 per month
             );
+
+            // Increment day shift count if assigned
+            if (attempts < 100 && availableShift) {
+                dayShiftCount[availableShift]++;
+            }
         } else if (shiftType === 'night') {
             // Ensure no night shift follows a night shift or a day shift on the same or previous day
             do {
@@ -129,7 +145,7 @@ function updateHolidayList() {
                 attempts++;
             } while (
                 (availableShift === lastShift[Object.keys(lastShift).pop()]) || // No consecutive night shifts
-                personnel.find(p => p.name === availableShift)?.gender === "female" || // No female night shifts
+                personnel.find(p => p.name === availableShift)?.gender === "女" || // No female night shifts
                 (availableShift === currentShift) || // No night shift after a day shift
                 attempts < 100
             );
