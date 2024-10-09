@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動排班器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>自動排班器</h1>
+
+    <h2>上傳人員名冊（CSV格式）</h2>
+    <input type="file" id="uploadPersonnel">
+    <button id="uploadPersonnelButton">上傳</button>
+    <ul id="personnelList"></ul>
+
+    <h2>加入國定假日日期</h2>
+    <input type="date" id="holidayInput">
+    <button id="addHolidayButton">加入</button>
+    <ul id="holidayList"></ul>
+
+    <h2>產製輪值表</h2>
+    <label name="startDate">起始排班日期</label>
+    <input type="date" id="startDate">
+    <br>
+    <label name="endDate">結束排班日期</label>    
+    <input type="date" id="endDate">
+    <br>
+    <button id="generateButton">產製</button>
+
+    <h2>輪值表</h2>
+    <table id="scheduleTable">
+        <tr>
+            <th>日期</th>
+            <th>星期</th>
+            <th>日班</th>
+            <th>夜班</th>
+        </tr>
+    </table>
+
+    <script src="script.js"></script>
+</body>
+</html>
